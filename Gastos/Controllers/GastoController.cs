@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Data.Entity.Migrations;
 
 namespace Gastos.Controllers
 {
@@ -69,12 +70,10 @@ namespace Gastos.Controllers
             GastoContext db = new GastoContext();
             if (ModelState.IsValid)
             {
-                using (var dbContext = new GastoContext())
-                {
-                    Gasto gasto = db.Gastos.First(g => g.Id == id);
-                    gasto.Tittle = obj.Tittle;
-                    dbContext.SaveChangesAsync();
-                }
+                Gasto gasto = db.Gastos.First(g => g.Id == id);
+                gasto = obj;
+                db.Gastos.AddOrUpdate(gasto);
+                db.SaveChangesAsync();
 
                 return RedirectToAction("Index");
             }
