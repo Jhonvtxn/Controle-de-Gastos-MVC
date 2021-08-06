@@ -15,6 +15,8 @@ namespace Gastos.Context
         }
 
         public DbSet<Gasto> Gastos { get; set; }
+        public DbSet<Categoria> Categorias { get; set; }
+
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Conventions.Remove<PluralizingTableNameConvention>();

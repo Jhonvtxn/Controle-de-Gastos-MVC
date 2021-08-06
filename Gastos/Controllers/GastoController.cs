@@ -2,6 +2,7 @@
 using Gastos.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,15 +12,17 @@ namespace Gastos.Controllers
 {
     public class GastoController : Controller
     {
-        // GET: GastoController1
         public ActionResult Index()
         {
             GastoContext db = new GastoContext();
-            var gastos = db.Gastos.ToList();
+            var gastos = db.Gastos.Include("Categoria").ToList();
+
+            var gastosTotais = gastos.Sum(x => x.Valor);
+            ViewBag.Total = gastosTotais;
+
             return View(gastos);
         }
 
-        // GET: GastoController1/Details/5
         public ActionResult Details(int id)
         {
             GastoContext db = new GastoContext();
@@ -28,13 +31,12 @@ namespace Gastos.Controllers
             
         }
 
-        // GET: GastoController1/Create
         public ActionResult Create()
         {
+            FillCategory(1);
             return View();
         }
 
-        // POST: GastoController1/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public ActionResult Create(Gasto obj)
@@ -52,46 +54,67 @@ namespace Gastos.Controllers
             }
         }
 
-        // GET: GastoController1/Edit/5
         public ActionResult Edit(int id)
         {
-            return View();
+            GastoContext db = new GastoContext();
+            var gastos = db.Gastos.Find(id);
+            FillCategory(gastos.CategoriaId);
+            return View(gastos);
         }
 
-        // POST: GastoController1/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        public ActionResult Edit(int id, Gasto obj)
         {
-            try
+            GastoContext db = new GastoContext();
+            if (ModelState.IsValid)
             {
-                return RedirectToAction(nameof(Index));
+                using (var dbContext = new GastoContext())
+                {
+                    Gasto gasto = db.Gastos.First(g => g.Id == id);
+                    gasto.Tittle = obj.Tittle;
+                    dbContext.SaveChangesAsync();
+                }
+
+                return RedirectToAction("Index");
             }
-            catch
+            else
             {
-                return View();
+                return View(obj);
             }
+
         }
 
-        // GET: GastoController1/Delete/5
         public ActionResult Delete(int id)
         {
-            return View();
+            GastoContext db = new GastoContext();
+            var gasto = db.Gastos.Find(id);
+            return View(gasto);
         }
 
-        // POST: GastoController1/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
+        public ActionResult Delete(int id, Gasto obj)
         {
-            try
+            GastoContext db = new GastoContext();
+            if (ModelState.IsValid)
             {
-                return RedirectToAction(nameof(Index));
+                Gasto gasto = db.Gastos.Find(obj.Id);
+                db.Gastos.Remove(gasto);
+                db.SaveChangesAsync();
+                return RedirectToAction("Index");
             }
-            catch
+            else
             {
-                return View();
+                return View(obj);
             }
+        }
+        public void FillCategory(int id)
+        {
+            GastoContext db = new GastoContext();
+
+            ViewBag.CategoryId = new SelectList(db.Categorias.ToList(), "IdCategory", "Name", id);
+
         }
     }
 }
